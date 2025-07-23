@@ -1,0 +1,149 @@
+---
+title: "VWFA_methods_LMEs"
+author: "Jamie Mitchell"
+date: "2025-07-22"
+output: html_document
+---
+
+Set Up
+```{r setup-pt1}
+library("lme4")         # for linear mixed effects models
+library("tidyverse")    # for wrangling
+library("glue")         # for setting paths
+library("lmerTest")     # for linear mixed effects models
+```
+
+```{r setup-pt2}
+# flag to save tables
+save_table = TRUE
+
+# set directories
+base_dir = dirname(getwd())
+csv_dir = glue('{base_dir}/analysis/CSVs/')
+tbl_dir = glue('{base_dir}/figures/tables/')
+```
+
+1 - sepTask ROI PSC 
+```{r prep-data}
+# load data and filter
+sepTask_psc = read_csv(glue('{csv_dir}sepTaskROIs_sepTaskMaps_meanPSC.csv'),show_col_types = FALSE)
+sepTask_psc = subset(sepTask_psc,category!='noText')
+
+# order variables
+sepTask_psc$roi_task = factor(sepTask_psc$roi_task,levels=c('oneback','fixation'))
+sepTask_psc$map_task = factor(sepTask_psc$map_task,levels=c('oneback','fixation'))
+sepTask_psc$category = factor(sepTask_psc$category,levels=c('T','FF','F','O','L'))
+
+categories = c('T','FF','F','O','L')
+```
+
+```{r specify-run-model}
+# loop through categories to fit model
+for (cat in categories) {
+  
+  # subset data by category
+  my_data = subset(sepTask_psc,category==cat)
+  
+  # specify & run the model
+  formula = as.formula('mean_psc ~  roi_task * map_task + (1 | sub)')
+  lme_model=lmer(formula = formula, data = my_data)
+
+  
+  # save table of results
+  if(save_table){
+    stat_summary = lme_model %>% summary()
+    write.table(stat_summary$coefficients,glue("{tbl_dir}sepTask_{cat}_psc_LME.txt"), row.names = TRUE, sep = "\t")
+  }
+}
+```
+
+2 - sepTask ROI SI 
+```{r prep-data}
+# load data and filter
+sepTask_si = read_csv(glue('{csv_dir}VWFA_SI.csv'),show_col_types = FALSE)
+
+# order variables
+sepTask_si$roi_task = factor(sepTask_si$roi_task,levels=c('oneback','fixation'))
+sepTask_si$map_task = factor(sepTask_si$map_task,levels=c('oneback','fixation'))
+```
+
+```{r specify-run-model}
+# specify & run the model
+formula = as.formula('SI ~ roi_task * map_task + (1 | sub)')
+lme_model=lmer(formula = formula, data = sepTask_si)
+
+# save table of results
+if(save_table){
+  stat_summary = lme_model %>% summary()
+  write.table(stat_summary$coefficients,glue("{tbl_dir}sepTask_si_LME.txt"), row.names = TRUE, sep = "\t")
+}
+```
+
+3 - Group ROIs PSC
+```{r prep-data}
+# load data and filter
+roi_psc = read_csv(glue('{csv_dir}native-group-ROIs_PSC.csv'),show_col_types = FALSE)
+roi_psc = subset(roi_psc,category %in% c('F','T','FF','O','L'))
+
+# order variables
+which_rois = c('VWFA','FFA')
+categories = c('T','FF','F','O','L')
+```
+
+```{r specify-run-model}
+# loop through ROI type
+for (which_roi in which_rois) {
+ 
+  # filter the data and specify order
+  if (which_roi == "VWFA"){
+    roi_data = subset(roi_psc,roi %in% c('VWFA','cVWFA','aVWFA','rVWFA','kVWFA'))
+    roi_data$roi = factor(roi_data$roi,levels=c('VWFA','cVWFA','aVWFA','rVWFA','kVWFA'))
+    roi_data$category = factor(roi_data$category,levels=c('T','FF','F','O','L'))
+  }
+  
+  if (which_roi == "FFA"){
+    roi_data = subset(roi_psc,roi %in% c('FFA','cFFA','aFFA','rFFA','kFFA'))
+    roi_data$roi = factor(roi_data$roi,levels=c('FFA','cFFA','aFFA','rFFA','kFFA'))
+    roi_data$category = factor(roi_data$category,levels=c('F','T','FF','O','L'))
+  }
+  
+  # loop through categories
+  for (cat in categories) {
+    
+    #filter data
+    cat_data = subset(roi_data,category==cat)
+    
+    # specify & run the model
+    formula = as.formula('mean_psc ~ roi + (1 | sub)')
+    lme_model=lmer(formula = formula, data = cat_data)
+
+    # save table of results
+    if(save_table){
+      stat_summary = lme_model %>% summary()
+      write.table(stat_summary$coefficients,glue("{tbl_dir}groupROIs_{which_roi}_{cat}_LME.txt"), row.names = TRUE, sep = "\t")
+    }
+  }
+}
+```
+
+
+4 - group ROIs SI 
+```{r prep-data}
+# load data and filter
+roi_SI = read_csv(glue('{csv_dir}groupVWFAs_SI.csv'),show_col_types = FALSE)
+
+# specify order
+roi_SI$roi = factor(roi_SI$roi,levels=c('VWFA','cVWFA','aVWFA','rVWFA','kVWFA'))
+```
+
+```{r specify-run-model}
+# specify & run the model
+formula = as.formula('SI ~ roi + (1 | sub)')
+lme_model=lmer(formula = formula, data = roi_SI)
+
+# save table of results
+if(save_table){
+  stat_summary = lme_model %>% summary()
+  write.table(stat_summary$coefficients,glue("{tbl_dir}groupROIs_VWFA_SI_LME.txt"), row.names = TRUE, sep = "\t")
+}
+```
