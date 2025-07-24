@@ -1,5 +1,5 @@
 # Mitchell_VWFAmethods_2025
-Code associated with Mitchell et al., 2025, bioRxiv - VWFA demonstrates individual and task-agnostic consistency but inter-individual variability.
+Code associated with Mitchell, Fuentes-Jimenez, Stone, Yablonski, & Yeatman, 2025, bioRxiv - VWFA demonstrates individual and task-agnostic consistency but inter-individual variability.
 
 ## General Note
 The data associated with this manuscript and analysis can be found in a Stanford University Libraries Digital Repository at [https://doi.org/10.25740/jp789mc0395](https://doi.org/10.25740/jp789mc0395). In order for the code to run flawlessly, you should download this data and store it in a folder named `data` and then download the code and store it in a parent folder alongside `data`. Addiotnally, proper installation of Freeview and the FreeSurfer viewing software[[1]](#1) is required for several of the files described below. Software information and installation instructions can be found [here](https://surfer.nmr.mgh.harvard.edu/).
